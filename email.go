@@ -16,7 +16,9 @@ type Message struct {
 	To          []string
 	Subject     string
 	Body        string
+	BodyContentType string
 	Attachments map[string][]byte
+
 }
 
 func (m *Message) Attach(file string) error {
@@ -50,7 +52,7 @@ func (m *Message) Bytes() []byte {
 		buf.WriteString("--" + boundary + "\n")
 	}
 
-	buf.WriteString("Content-Type: text/plain; charset=utf-8\n")
+	buf.WriteString("Content-Type: "+m.BodyContentType+"; charset=utf-8\n")
 	buf.WriteString(m.Body)
 
 	if len(m.Attachments) > 0 {
