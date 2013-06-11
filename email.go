@@ -7,7 +7,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"io/ioutil"
-	"log"
 	"net/smtp"
 	"path/filepath"
 	"strings"
