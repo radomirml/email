@@ -1,24 +1,25 @@
 // Copyright 2012 Santiago Corredoira
 // Distributed under a BSD-like license.
-package email
+package goemail
 
 import (
 	"bytes"
 	"encoding/base64"
 	"errors"
 	"io/ioutil"
+	"log"
 	"net/smtp"
 	"path/filepath"
+	"strings"
 )
 
 type Message struct {
-	From        string
-	To          []string
-	Subject     string
-	Body        string
+	From            string
+	To              []string
+	Subject         string
+	Body            string
 	BodyContentType string
-	Attachments map[string][]byte
-
+	Attachments     map[string][]byte
 }
 
 func (m *Message) Attach(file string) error {
@@ -40,7 +41,20 @@ func NewMessage(subject string, body string) *Message {
 }
 
 func (m *Message) Bytes() []byte {
+	return m.toBytes(false)
+}
+
+func (m *Message) BytesWithFromToHeaders() []byte {
+	return m.toBytes(true)
+}
+
+func (m *Message) toBytes(includeFromTo bool) []byte {
 	buf := bytes.NewBuffer(nil)
+
+	if includeFromTo {
+		buf.WriteString("From: " + m.From + "\n")
+		buf.WriteString("To: " + strings.Join(m.To, ",") + "\n")
+	}
 
 	buf.WriteString("Subject: " + m.Subject + "\n")
 	buf.WriteString("MIME-Version: 1.0\n")
@@ -52,7 +66,7 @@ func (m *Message) Bytes() []byte {
 		buf.WriteString("--" + boundary + "\n")
 	}
 
-	buf.WriteString("Content-Type: "+m.BodyContentType+"; charset=utf-8\n")
+	buf.WriteString("Content-Type: " + m.BodyContentType + "; charset=utf-8\n\n")
 	buf.WriteString(m.Body)
 
 	if len(m.Attachments) > 0 {
@@ -70,6 +84,8 @@ func (m *Message) Bytes() []byte {
 
 		buf.WriteString("--")
 	}
+
+	//log.Println("**** msg body >>>>>", buf, "<<<<<")
 
 	return buf.Bytes()
 }
